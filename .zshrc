@@ -169,10 +169,12 @@ function syntax_validation_precheck
 	# AND, OR
 	elif [[ -n $(echo ${buffarr[$(($buff_index-1))]} | grep "&&") ]] || [[ -n $(echo ${buffarr[$(($buff_index-1))]} | grep "||") ]]
 	then
-		if [[ $buff_index -lt ${#buffarr} ]]
-		then
-			syntax_validation
-		fi
+		syntax_validation
+
+	# Pipe
+	elif [[ -n $(echo ${buffarr[$(($buff_index-1))]} | grep "|") ]]
+	then
+		syntax_validation
 
 	# Command expression
 	elif [[ -n $(echo "${buffarr[$buff_index]}" | grep "\$(") ]]
