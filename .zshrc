@@ -146,7 +146,7 @@ function syntax_validation
 			# Check to see if command string contains known commands
 			for (( prog_index=${progarr_firstcharindex[$firstchar_index]}; prog_index <= ${progarr_firstcharindex[$(($firstchar_index+1))]}; prog_index++ ))
 			do
-				if [[ ${progarr[$prog_index]} == ${buffarr[$buff_index]} ]]
+				if [[ "${progarr[$prog_index]}" == ${buffarr[$buff_index]} ]]
 				then
 					IsCommand=true
 					break
@@ -192,7 +192,7 @@ function syntax_validation_precheck
 	fi
 
 	# Extract each component of the current command string
-	echo $BUFFER | grep -Eo '[[:alnum:]]{1,100}|\|\s|\|\||<\s|\$\(|\&\&' > "$zpath/buffer"
+	echo $BUFFER | grep -Eo '[[:alnum:]]{1,100}|[[:alnum:]]{1,100}\+{1,100}|[[:alnum:]]{1,100}\_{1,100)|\|\s|\|\||<\s|\$\(|\&\&' > "$zpath/buffer"
 
 	# Create array from buffer
 	buff_index=-1
@@ -670,6 +670,18 @@ function trap_9
 	zle vi-forward-char
 	do_precheck_and_redraw_prompt
 }
+function trap_+
+{
+	BUFFER=$LBUFFER"+"$RBUFFER
+	zle vi-forward-char
+	do_precheck_and_redraw_prompt
+}
+function trap__
+{
+	BUFFER=$LBUFFER"_"$RBUFFER
+	zle vi-forward-char
+	do_precheck_and_redraw_prompt
+}
 function trap_backspace
 {
 	zle backward-delete-char
@@ -677,6 +689,10 @@ function trap_backspace
 }
 function trap_enter
 {
+	RPROMPT="%B⟪$(date +"%T.%N")⟫%b"
+	zle reset-prompt
+	RPROMPT=""
+
 	color="green"
 	zle accept-line
 }
@@ -712,6 +728,12 @@ do
 	bindkey $number trap_$number
 	zle -N trap_$number
 done
+
+bindkey '+' trap_+
+zle -N trap_+
+
+bindkey '_' trap__
+zle -N trap__
 
 bindkey '^?' trap_backspace
 zle -N trap_backspace
