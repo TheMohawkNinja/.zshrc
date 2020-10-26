@@ -30,15 +30,15 @@ term=$(tty | grep -Eo '[0-9]{0,9}')
 color="green"
 oldcolor=$color
 IsCommand=false
-linefill=$(printf "%*s" $(($COLUMNS-$(echo -n $(tty) | wc -m)-$(echo -n $PWD | wc -m)-22)) "" | sed "s/ /─/g")
-PROMPT=$'%F{$color}┌%f%F{$(shorthash "pts/$term")}%B☾%b%y%B☽%b%f%F{$color}─%f%F{$(shorthash $PWD)}%b%B⎛%b%d%B⎠%b%f%F{$color}$linefill%f%B⟪$(date +"%T.%N")⟫%b%F{$color}$prompt_newline└─> %f'
 PROMPT2='%F{$color}──>%f'
 PS2='%F{$color}──>%f'
 
 precmd()
 {
-	linefill=$(printf "%*s" $(($COLUMNS-$(echo -n $(tty) | wc -m)-$(echo -n $PWD | wc -m)-22)) "" | sed "s/ /─/g")
-	PROMPT=$'%F{$color}┌%f%F{$(shorthash "pts/$term")}%B☾%b%y%B☽%b%f%F{$color}─%f%F{$(shorthash $PWD)}%b%B⎛%b%d%B⎠%b%f%F{$color}$linefill%f%B⟪$(date +"%T.%N")⟫%b%F{$color}$prompt_newline└─> %f'
+	#linefill=$(printf "%*s" $(($COLUMNS-$(echo -n $(tty) | wc -m)-$(echo -n $PWD | wc -m)-22)) "" | sed "s/ /─/g")
+	#PROMPT=$'%F{$color}┌%f%F{$(shorthash "pts/$term")}%B☾%b%y%B☽%b%f%F{$color}─%f%F{$(shorthash $PWD)}%b%B⎛%b%d%B⎠%b%f%F{$color}$linefill%f%B⟪$(date +"%T.%N")⟫%b%F{$color}$prompt_newline└─> %f'
+
+	PROMPT=$'%F{$color}┌%f%F{$(shorthash "pts/$term")}%B☾%b%y%B☽%b%f%F{$color}─%f%F{$(shorthash $PWD)}%b%B⎛%b%d%B⎠%b%f$prompt_newline%F{$color}└─> %f'
 }
 
 # Make temp directory for syntax checking
@@ -696,6 +696,9 @@ function trap_backspace
 }
 function trap_enter
 {
+	linefill=$(printf "%*s" $(($COLUMNS-$(echo -n $(tty) | wc -m)-$(echo -n $PWD | wc -m)-22)) "" | sed "s/ / /g")
+	PROMPT=$'%F{$color}┌%f%F{$(shorthash "pts/$term")}%B☾%b%y%B☽%b%f%F{$color}─%f%F{$(shorthash $PWD)}%b%B⎛%b%d%B⎠%b%f%F{$color}$linefill%f%B⟪$(date +"%T.%N")⟫%b%F{$color}$prompt_newline└─> %f'
+	zle reset-prompt
 	zle accept-line
 	color="green"
 }
