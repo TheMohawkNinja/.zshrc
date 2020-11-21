@@ -199,7 +199,7 @@ function syntax_validation_precheck
 	fi
 
 	# Extract each component of the current command string
-	echo $BUFFER | grep -Eo '[[:alnum:]]{1,100}|[[:alnum:]]{1,100}\+{1,100}|[[:alnum:]]{1,100}\_{1,100)|\|\s|\|\||<\s|\$\(|\&\&|[[:punct:][:alnum:]\/]{1,100}' > "$zpath/buffer"
+	echo $BUFFER | grep -Eo '[[:alnum:]]{1,100}|[[:alnum:]]{1,100}\+{1,100}|[[:alnum:]]{1,100}\_{1,100)|\|\s|\|\||<\s|\$\(|\&\&' > "$zpath/buffer"
 
 	# Create array from buffer
 	buff_index=-1
@@ -207,7 +207,6 @@ function syntax_validation_precheck
 	for buffline in "${(@f)"$(<$zpath/buffer)"}"
 	{
 		buffarr[${#buffarr}]=$buffline
-		#echo $buffline
 	}
 
 	# Check for difference between last buffer and this buffer so that we only focus on that term
@@ -286,24 +285,7 @@ function syntax_validation_precheck
 		fi
 	fi
 
-	# Check for valid file/directories if applicable, and if they don't exist, turn prompt yellow
-	if [ $color != "red" ] || [ $IsCommand == true ]
-	then 
-		for (( i=0; i<=${#buffarr}; i++ ))
-		do
-			if [[ -n $(echo ${buffarr[$i]} | grep '\/') ]]
-			then
-				if [[ ! -e ${buffarr[$i]} ]] && [[ ! -d ${buffarr[$i]} ]]
-				then
-					color="yellow"
-				else
-					color="green"
-				fi
-			fi
-		done
-	fi
-
-	if [ $IsCommand == true ] && [ $color != "yellow" ]
+	if [ $IsCommand == true ]
 	then
 		color="green"
 	elif [ $IsCommand == false ]
