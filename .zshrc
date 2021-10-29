@@ -91,6 +91,7 @@ progarr[$((${#progarr}+1))]="pushd"
 progarr[$((${#progarr}+1))]="pushln"
 progarr[$((${#progarr}+1))]="pwd"
 progarr[$((${#progarr}+1))]="return"
+progarr[$((${#progarr}+1))]="repeat"
 progarr[$((${#progarr}+1))]="setopt"
 progarr[$((${#progarr}+1))]="shift"
 progarr[$((${#progarr}+1))]="source"
@@ -160,7 +161,22 @@ function syntax_validation
 
 				elif [ $prog_index -eq ${progarr_firstcharindex[$(($firstchar_index+1))]} ]
 				then
-					IsCommand=false
+					if [[ -n $(echo ${buffarr[$buff_index]} | grep '\/') ]] && [[ -z $(echo ${buffarr[$buff_index]} | grep '\:\/\/') ]]
+					then
+						if [[ ${buffarr[$buff_index]:0:1} == "~" ]]
+						then
+							buffarr[$buff_index]="/home/$USER/"${buffarr[$buff_index]:1}
+						fi
+
+						if [[ ! -e ${buffarr[$buff_index]} ]] && [[ ! -d ${buffarr[$buff_index]} ]]
+						then
+							color="yellow"
+						else
+							color="green"
+						fi
+					else
+						IsCommand=false
+					fi
 				fi
 			done
 		fi
@@ -199,7 +215,7 @@ function syntax_validation_precheck
 	fi
 
 	# Extract each component of the current command string
-	echo $BUFFER | grep -Eo '[[:alnum:]]{1,100}|[[:alnum:]]{1,100}\+{1,100}|[[:alnum:]]{1,100}\_{1,100)|\|\s|\|\||<\s|\$\(|\&\&' > "$zpath/buffer"
+	echo $BUFFER | grep -Eo '[[:alnum:]]{1,100}|[[:alnum:]]{1,100}\+{1,100}|[[:alnum:]]{1,100}\_{1,100)|\|\s|\|\||<\s|\$\(|\&\&|[[:punct:][:alnum:]\/]{1,100}' > "$zpath/buffer"
 
 	# Create array from buffer
 	buff_index=-1
@@ -207,6 +223,7 @@ function syntax_validation_precheck
 	for buffline in "${(@f)"$(<$zpath/buffer)"}"
 	{
 		buffarr[${#buffarr}]=$buffline
+		#echo $buffline
 	}
 
 	# Check for difference between last buffer and this buffer so that we only focus on that term
@@ -285,7 +302,29 @@ function syntax_validation_precheck
 		fi
 	fi
 
-	if [ $IsCommand == true ]
+	# Check for valid file/directories if applicable, and if they don't exist, turn prompt yellow
+	if [ $color != "red" ] || [ $IsCommand == true ]
+	then 
+		for (( i=0; i<=${#buffarr}; i++ ))
+		do
+			if [[ -n $(echo ${buffarr[$i]} | grep '\/') ]] && [[ -z $(echo ${buffarr[$i]} | grep '\:\/\/') ]]
+			then
+				if [[ ${buffarr[$i]:0:1} == "~" ]]
+				then
+					buffarr[$i]="/home/$USER/"${buffarr[$i]:1}
+				fi
+
+				if [[ ! -e ${buffarr[$i]} ]] && [[ ! -d ${buffarr[$i]} ]]
+				then
+					color="yellow"
+				else
+					color="green"
+				fi
+			fi
+		done
+	fi
+
+	if [ $IsCommand == true ] && [ $color != "yellow" ]
 	then
 		color="green"
 	elif [ $IsCommand == false ]
@@ -689,6 +728,12 @@ function trap__
 	zle vi-forward-char
 	do_precheck_and_redraw_prompt
 }
+function trap_.
+{
+	BUFFER=$LBUFFER"."$RBUFFER
+	zle vi-forward-char
+	do_precheck_and_redraw_prompt
+}
 function trap_backspace
 {
 	zle backward-delete-char
@@ -711,6 +756,11 @@ function trap_space
 {
 	BUFFER=$LBUFFER" "$RBUFFER
 	zle vi-forward-char
+	do_precheck_and_redraw_prompt
+}
+function trap_tab
+{
+	compinit
 	do_precheck_and_redraw_prompt
 }
 
@@ -741,6 +791,9 @@ zle -N trap_+
 bindkey '_' trap__
 zle -N trap__
 
+bindkey '.' trap_.
+zle -N trap_.
+
 bindkey '^?' trap_backspace
 zle -N trap_backspace
 
@@ -752,5 +805,8 @@ zle -N trap_delete
 
 bindkey ' ' trap_space
 zle -N trap_space
+
+#bindkey '	' trap_tab
+#zle -N trap_tab
 
 export EDITOR='vim'
