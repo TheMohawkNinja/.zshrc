@@ -741,7 +741,10 @@ function trap_backspace
 }
 function trap_enter
 {
-	linefill=$(printf "%*s" $(($COLUMNS-$(echo -n $(tty) | wc -m)-$(echo -n $PWD | wc -m)-22)) "" | sed "s/ / /g")
+	#term_ln=$(echo $term | wc -m)
+	#PWD_ln=$(echo $PWD | wc -m)
+	#date_ln=$(echo $(date +"%T.%N") | wc -m)
+	linefill=$(printf "%*s" $(($COLUMNS-$(echo $term | wc -m)-$(echo $PWD | wc -m)-$(echo $(date +"%T.%N") | wc -m)-9)) "" | sed "s/ / /g")
 	PROMPT=$'%F{$color}┌%f%F{$(shorthash "pts/$term")}%B☾%b%y%B☽%b%f%F{$color}─%f%F{$(shorthash $PWD)}%b%B⎛%b%d%B⎠%b%f%F{$color}$linefill%f%B⟪$(date +"%T.%N")⟫%b%F{$color}$prompt_newline└─> %f'
 	zle reset-prompt
 	zle accept-line
