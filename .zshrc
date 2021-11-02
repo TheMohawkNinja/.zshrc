@@ -35,9 +35,6 @@ PS2='%F{$color}──>%f'
 
 precmd()
 {
-	#linefill=$(printf "%*s" $(($COLUMNS-$(echo -n $(tty) | wc -m)-$(echo -n $PWD | wc -m)-22)) "" | sed "s/ /─/g")
-	#PROMPT=$'%F{$color}┌%f%F{$(shorthash "pts/$term")}%B☾%b%y%B☽%b%f%F{$color}─%f%F{$(shorthash $PWD)}%b%B⎛%b%d%B⎠%b%f%F{$color}$linefill%f%B⟪$(date +"%T.%N")⟫%b%F{$color}$prompt_newline└─> %f'
-
 	PROMPT=$'%F{$color}┌%f%F{$(shorthash "pts/$term")}%B☾%b%y%B☽%b%f%F{$color}─%f%F{$(shorthash $PWD)}%b%B⎛%b%d%B⎠%b%f$prompt_newline%F{$color}└─> %f'
 }
 
@@ -157,10 +154,18 @@ function syntax_validation
 				if [[ "${progarr[$prog_index]}" == ${buffarr[$buff_index]} ]]
 				then
 					IsCommand=true
+
+					#For autocd. If directory of the same name exists, denote the ambiguity as purple
+					if [[ -d ${buffarr[$buff_index]} ]]
+					then
+						color="93"
+					fi
+
 					break
 
 				elif [ $prog_index -eq ${progarr_firstcharindex[$(($firstchar_index+1))]} ]
 				then
+					#Check for valid directory.
 					if [[ -n $(echo ${buffarr[$buff_index]} | grep '\/') ]] && [[ -z $(echo ${buffarr[$buff_index]} | grep '\:\/\/') ]]
 					then
 						if [[ ${buffarr[$buff_index]:0:1} == "~" ]]
@@ -171,11 +176,17 @@ function syntax_validation
 						if [[ ! -e ${buffarr[$buff_index]} ]] && [[ ! -d ${buffarr[$buff_index]} ]]
 						then
 							color="yellow"
+
 						else
 							color="green"
 						fi
 					else
-						IsCommand=false
+						if [[ -d ${buffarr[$buff_index]} ]]
+						then
+							color="green"
+						else
+							IsCommand=false
+						fi
 					fi
 				fi
 			done
@@ -206,7 +217,7 @@ function check_next_command
 # Syntax checker wrapper
 function syntax_validation_precheck
 {
-	if [[ -n $(echo "$BUFFER" | grep -Eo '[[:alnum:]]') ]]
+	if [[ $(echo "$BUFFER" | grep -Eo '[[:alnum:]]') ]]
 	then
 		IsCommand="unknown"
 	else
@@ -218,12 +229,11 @@ function syntax_validation_precheck
 	echo $BUFFER | grep -Eo '[[:alnum:]]{1,100}|[[:alnum:]]{1,100}\+{1,100}|[[:alnum:]]{1,100}\_{1,100)|\|\s|\|\||<\s|\$\(|\&\&|[[:punct:][:alnum:]\/]{1,100}' > "$zpath/buffer"
 
 	# Create array from buffer
-	buff_index=-1
+	buff_index=0
 	declare -A buffarr
 	for buffline in "${(@f)"$(<$zpath/buffer)"}"
 	{
 		buffarr[${#buffarr}]=$buffline
-		#echo $buffline
 	}
 
 	# Check for difference between last buffer and this buffer so that we only focus on that term
@@ -324,7 +334,7 @@ function syntax_validation_precheck
 		done
 	fi
 
-	if [ $IsCommand == true ] && [ $color != "yellow" ]
+	if [ $IsCommand == true ] && [ $color != "yellow" ] && [ $color != "93" ]
 	then
 		color="green"
 	elif [ $IsCommand == false ]
