@@ -33,6 +33,10 @@ IsCommand=false
 PROMPT2='%F{$color}──>%f'
 PS2='%F{$color}──>%f'
 
+# Arrays for backspace optimization
+set -A T "00:00:00"
+set -A N "000000000"
+
 precmd()
 {
 	PROMPT=$'%F{$color}┌%f%F{$(shorthash "pts/$term")}%B☾%b%y%B☽%b%f%F{$color}─%f%F{$(shorthash $PWD)}%b%B⎛%b%d%B⎠%b%f$prompt_newline%F{$color}└─> %f'
@@ -176,7 +180,6 @@ function syntax_validation
 						if [[ ! -e ${buffarr[$buff_index]} ]] && [[ ! -d ${buffarr[$buff_index]} ]]
 						then
 							color="yellow"
-
 						else
 							color="green"
 						fi
@@ -747,7 +750,27 @@ function trap_.
 function trap_backspace
 {
 	zle backward-delete-char
-	do_precheck_and_redraw_prompt
+
+	T[$((${#T}+1))]=$(date +"%T") # Time in hh:mm:ss
+	N[$((${#N}+1))]=$(date +"%N") # Nanoseconds
+
+	# Keeo array size at 2 for memory management
+	if [ -n "$T[3]" ]
+	then
+		T[1]=$T[2]
+		T[2]=$T[3]
+		T[3]=()
+
+		N[1]=$N[2]
+		N[2]=$N[3]
+		N[3]=()
+	fi
+
+	# If it's been greater than an hour, greater than a minute, greater than a second, or greater than 100 miliseconds between keypresses, redraw prompt, otherwise ignore (prevent lag)
+	if [ ${T[1]:0:2} -lt ${T[2]:0:2} ] || [ ${T[1]:3:2} -lt ${T[2]:3:2} ] || [ ${T[1]:6:2} -lt ${T[2]:6:2} ] || [ $(( ${N[2]:0:3} - ${N[1]:0:3} )) -gt 100 ]
+	then
+		do_precheck_and_redraw_prompt
+	fi
 }
 function trap_enter
 {
@@ -770,17 +793,38 @@ function trap_space
 }
 function trap_tab
 {
-	compinit
-	do_precheck_and_redraw_prompt
-}
+	# Get everyting after the last space in $a
+	# ${a##* }
 
+	set -A BUFFER_ln "${BUFFER##* }" "${BUFFER##*;}" "${BUFFER##*&}" "${BUFFER##*|}"
+	zcomp=$(~/.zshcapture $BUFFER | head -1 | tail -1)
+	rm ~/bufferln
+	for i in "$BUFFER_ln"; do echo ${BUFFER_ln[$i]} >> ~/bufferln; done
+
+	if [[ -n $zcomp ]]
+	then
+		for i in "$BUFFER_ln"
+		do
+			if [ ${#BUFFER_ln[$i]} -lt ${#zcomp} ]
+			then
+				BUFFER=${BUFFER_ln[$i]}${zcomp:0:$((${#zcomp}-1))}
+			fi
+		done
+
+		for (( i=0; i<=$(echo $zcomp | wc -m); i++ ))
+		do
+			zle vi-forward-char
+		done
+		do_precheck_and_redraw_prompt
+	fi
+}
 zle -N do_precheck_and_redraw_prompt
 
 # Bind all letters, numbers, and backspace to it
-for letter in {A..Z}
+for LETTER in {A..Z}
 do
-	bindkey $letter trap_$letter
-	zle -N trap_$letter
+	bindkey $LETTER trap_$LETTER
+	zle -N trap_$LETTER
 done
 
 for letter in {a..z}
