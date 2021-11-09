@@ -233,7 +233,7 @@ function syntax_validation_precheck
 	fi
 
 	# Extract each component of the current command string
-	echo $BUFFER | grep -Eo '[[:alnum:]]{1,100}|[[:alnum:]]{1,100}\+{1,100}|[[:alnum:]]{1,100}\_{1,100)|\|\s|\|\||<\s|\$\(|\&\&|[[:punct:][:alnum:]\/]{1,100}' > "$zpath/buffer"
+	echo $BUFFER | grep -Eo '[[:alnum:]]{1,100}|[[:alnum:]]{1,100}\+{1,100}|[[:alnum:]]{1,100}\_{1,100)|\|\s|\|\||<\s|\$\(|\&\&|[[:punct:][:alnum:]\/]{1,100}|;{1,100}' > "$zpath/buffer"
 
 	# Create array from buffer
 	buff_index=0
@@ -246,7 +246,7 @@ function syntax_validation_precheck
 	# Check for difference between last buffer and this buffer so that we only focus on that term
 	for (( i=0; i < ${#buffarr}; i++ ))
 	do
-		if [[ ${buffarr[$i]} != ${buffarr_old[$i]} ]] && [[ $buff_index -eq -1 ]]
+		if [[ ${buffarr[$i]} != ${buffarr_old[$i]} ]]
 		then
 			buff_index=$i
 			break
@@ -262,12 +262,12 @@ function syntax_validation_precheck
 	if [[ $buff_index -eq 0 ]] && [[ -n $(echo ${buffarr[$buff_index]} | grep -Eo '[[:alnum:]]{1,100}') ]]
 	then
 		syntax_validation
-
-	# sudo
+	
+	# sudo, nohup
 	elif [[ -n $(echo ${buffarr[$(($buff_index-1))]} | grep "sudo") ]] || [[ -n $(echo ${buffarr[$(($buff_index-1))]} | grep "nohup") ]]
 	then
 		syntax_validation
-
+	
 	# AND, OR
 	elif [[ -n $(echo ${buffarr[$(($buff_index-1))]} | grep "&&") ]] || [[ -n $(echo ${buffarr[$(($buff_index-1))]} | grep "||") ]]
 	then
@@ -275,6 +275,11 @@ function syntax_validation_precheck
 
 	# Pipe
 	elif [[ -n $(echo ${buffarr[$(($buff_index-1))]} | grep "|") ]]
+	then
+		syntax_validation
+	
+	# Semi-colon
+	elif [[ -n $(echo ${buffarr[$(($buff_index-1))]} | grep ";") ]]
 	then
 		syntax_validation
 
@@ -755,7 +760,7 @@ function trap_backspace
 {
 	zle backward-delete-char
 
-	T[$((${#T}+1))]=$(date +"%s%3N") # Time in hh:mm:ss
+	T[$((${#T}+1))]=$(date +"%s%3N") # Seconds and miliseconds since UNIX epoch
 
 	# Keeo array size at 2 for memory management
 	if [ -n "$T[3]" ]
