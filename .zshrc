@@ -24,7 +24,7 @@ bindkey "^[[7~" beginning-of-line
 # Colorize ls output
 alias ls='ls --color=auto'
 
-# Variables
+# General variables
 zpath="/dev/shm/zsh"
 term=$(tty | grep -Eo '[0-9]{0,9}')
 color="green"
@@ -33,9 +33,14 @@ IsCommand=false
 PROMPT2='%F{$color}──>%f'
 PS2='%F{$color}──>%f'
 
+# Colors
+BUFFER_GOOD="green"
+BUFFER_BAD_DIR="yellow"
+BUFFER_BAD="red"
+BUFFER_AMBIGUOUS="93"
+
 # Arrays for backspace optimization
-set -A T "00:00:00"
-set -A N "000000000"
+set -A T $(date +"%s%3N")
 
 precmd()
 {
@@ -141,7 +146,6 @@ do
 		progarr_firstcharindex[$(($#progarr_firstcharindex))]=$prog
 		prog_firstchar=${progarr[$prog]:0:1}
 	fi
-
 done
 
 # Syntax checker
@@ -162,7 +166,7 @@ function syntax_validation
 					#For autocd. If directory of the same name exists, denote the ambiguity as purple
 					if [[ -d ${buffarr[$buff_index]} ]]
 					then
-						color="93"
+						color=$BUFFER_AMBIGUOUS
 					fi
 
 					break
@@ -179,14 +183,14 @@ function syntax_validation
 
 						if [[ ! -e ${buffarr[$buff_index]} ]] && [[ ! -d ${buffarr[$buff_index]} ]]
 						then
-							color="yellow"
+							color=$BUFFER_BAD_DIR
 						else
-							color="green"
+							color=$BUFFER_GOOD
 						fi
 					else
 						if [[ -d ${buffarr[$buff_index]} ]]
 						then
-							color="green"
+							color=$BUFFER_GOOD
 						else
 							IsCommand=false
 						fi
@@ -224,7 +228,7 @@ function syntax_validation_precheck
 	then
 		IsCommand="unknown"
 	else
-		color="green"
+		color=$BUFFER_GOOD
 		return
 	fi
 
@@ -329,20 +333,20 @@ function syntax_validation_precheck
 
 				if [[ ! -e ${buffarr[$i]} ]] && [[ ! -d ${buffarr[$i]} ]]
 				then
-					color="yellow"
+					color=$BUFFER_BAD_DIR
 				else
-					color="green"
+					color=$BUFFER_GOOD
 				fi
 			fi
 		done
 	fi
 
-	if [ $IsCommand == true ] && [ $color != "yellow" ] && [ $color != "93" ]
+	if [ $IsCommand == true ] && [ $color != $BUFFER_BAD_DIR ] && [ $color != $BUFFER_AMBIGUOUS ]
 	then
-		color="green"
+		color=$BUFFER_GOOD
 	elif [ $IsCommand == false ]
 	then
-		color="red"
+		color=$BUFFER_BAD
 	fi
 }
 
@@ -751,8 +755,7 @@ function trap_backspace
 {
 	zle backward-delete-char
 
-	T[$((${#T}+1))]=$(date +"%T") # Time in hh:mm:ss
-	N[$((${#N}+1))]=$(date +"%N") # Nanoseconds
+	T[$((${#T}+1))]=$(date +"%s%3N") # Time in hh:mm:ss
 
 	# Keeo array size at 2 for memory management
 	if [ -n "$T[3]" ]
@@ -760,16 +763,17 @@ function trap_backspace
 		T[1]=$T[2]
 		T[2]=$T[3]
 		T[3]=()
-
-		N[1]=$N[2]
-		N[2]=$N[3]
-		N[3]=()
 	fi
 
-	# If it's been greater than an hour, greater than a minute, greater than a second, or greater than 100 miliseconds between keypresses, redraw prompt, otherwise ignore (prevent lag)
-	if [ ${T[1]:0:2} -lt ${T[2]:0:2} ] || [ ${T[1]:3:2} -lt ${T[2]:3:2} ] || [ ${T[1]:6:2} -lt ${T[2]:6:2} ] || [ $(( ${N[2]:0:3} - ${N[1]:0:3} )) -gt 100 ]
+	# If it's been greater than 100 miliseconds between keypresses, redraw prompt, otherwise ignore
+	# Prevents lag when holding in backspace
+	if [ $(( ${T[2]} - ${T[1]} )) -gt 100 ]
 	then
 		do_precheck_and_redraw_prompt
+	elif [ -z $BUFFER ]
+	then
+		color=$BUFFER_GOOD
+		zle reset-prompt
 	fi
 }
 function trap_enter
@@ -778,7 +782,7 @@ function trap_enter
 	PROMPT=$'%F{$color}┌%f%F{$(shorthash "pts/$term")}%B☾%b%y%B☽%b%f%F{$color}─%f%F{$(shorthash $PWD)}%b%B⎛%b%d%B⎠%b%f%F{$color}$linefill%f%B⟪$(date +"%T.%N")⟫%b%F{$color}$prompt_newline└─> %f'
 	zle reset-prompt
 	zle accept-line
-	color="green"
+	color=$BUFFER_GOOD
 }
 function trap_delete
 {
