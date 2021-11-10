@@ -24,20 +24,20 @@ bindkey "^[[7~" beginning-of-line
 # Colorize ls output
 alias ls='ls --color=auto'
 
-# General variables
-zpath="/dev/shm/zsh"
-term=$(tty | grep -Eo '[0-9]{0,9}')
-color="green"
-oldcolor=$color
-IsCommand=false
-PROMPT2='%F{$color}──>%f'
-PS2='%F{$color}──>%f'
-
 # Colors
 BUFFER_GOOD="green"
 BUFFER_BAD_DIR="yellow"
 BUFFER_BAD="red"
 BUFFER_AMBIGUOUS="93"
+
+# General variables
+zpath="/dev/shm/zsh"
+term=$(tty | grep -Eo '[0-9]{0,9}')
+color=$BUFFER_GOOD
+oldcolor=$color
+IsCommand=false
+PROMPT2='%F{$color}──>%f'
+PS2=$PROMPT2
 
 # Arrays for backspace optimization
 set -A T $(date +"%s%3N")
@@ -56,70 +56,14 @@ fi
 # Get unique list of programs from executable directories and ZSH builtins
 set -A progarr /bin/* /sbin/* /usr/bin/* /usr/sbin/* /usr/local/bin/*
 progarr=("${progarr[@]##*/}")
-progarr[$((${#progarr}+1))]="alias"
-progarr[$((${#progarr}+1))]="autoload"
-progarr[$((${#progarr}+1))]="bg"
-progarr[$((${#progarr}+1))]="break"
-progarr[$((${#progarr}+1))]="builtin"
-progarr[$((${#progarr}+1))]="cd"
-progarr[$((${#progarr}+1))]="command"
-progarr[$((${#progarr}+1))]="continue"
-progarr[$((${#progarr}+1))]="dirs"
-progarr[$((${#progarr}+1))]="disable"
-progarr[$((${#progarr}+1))]="disown"
-progarr[$((${#progarr}+1))]="echo"
-progarr[$((${#progarr}+1))]="emulate"
-progarr[$((${#progarr}+1))]="enable"
-progarr[$((${#progarr}+1))]="eval"
-progarr[$((${#progarr}+1))]="exec"
-progarr[$((${#progarr}+1))]="exit"
-progarr[$((${#progarr}+1))]="export"
-progarr[$((${#progarr}+1))]="false"
-progarr[$((${#progarr}+1))]="fc"
-progarr[$((${#progarr}+1))]="fg"
-progarr[$((${#progarr}+1))]="float"
-progarr[$((${#progarr}+1))]="functions"
-progarr[$((${#progarr}+1))]="getln"
-progarr[$((${#progarr}+1))]="getopts"
-progarr[$((${#progarr}+1))]="hash"
-progarr[$((${#progarr}+1))]="integer"
-progarr[$((${#progarr}+1))]="jobs"
-progarr[$((${#progarr}+1))]="kill"
-progarr[$((${#progarr}+1))]="let"
-progarr[$((${#progarr}+1))]="limit"
-progarr[$((${#progarr}+1))]="local"
-progarr[$((${#progarr}+1))]="logout"
-progarr[$((${#progarr}+1))]="noglob"
-progarr[$((${#progarr}+1))]="popd"
-progarr[$((${#progarr}+1))]="printf"
-progarr[$((${#progarr}+1))]="prompt"
-progarr[$((${#progarr}+1))]="pushd"
-progarr[$((${#progarr}+1))]="pushln"
-progarr[$((${#progarr}+1))]="pwd"
-progarr[$((${#progarr}+1))]="return"
-progarr[$((${#progarr}+1))]="repeat"
-progarr[$((${#progarr}+1))]="setopt"
-progarr[$((${#progarr}+1))]="shift"
-progarr[$((${#progarr}+1))]="source"
-progarr[$((${#progarr}+1))]="suspend"
-progarr[$((${#progarr}+1))]="test"
-progarr[$((${#progarr}+1))]="trap"
-progarr[$((${#progarr}+1))]="true"
-progarr[$((${#progarr}+1))]="ttyctl"
-progarr[$((${#progarr}+1))]="type"
-progarr[$((${#progarr}+1))]="typeset"
-progarr[$((${#progarr}+1))]="ulimit"
-progarr[$((${#progarr}+1))]="umask"
-progarr[$((${#progarr}+1))]="unalias"
-progarr[$((${#progarr}+1))]="unhash"
-progarr[$((${#progarr}+1))]="unlimit"
-progarr[$((${#progarr}+1))]="unset"
-progarr[$((${#progarr}+1))]="unsetopt"
-progarr[$((${#progarr}+1))]="wait"
-progarr[$((${#progarr}+1))]="whence"
-progarr[$((${#progarr}+1))]="where"
-progarr[$((${#progarr}+1))]="which"
-progarr[$((${#progarr}+1))]="zcompile"
+
+# Add zsh-specific commands onto the list
+set -A ZSH_CMDs "alias" "autoload" "bg" "break" "builtin" "cd" "command" "continue" "dirs" "disable" "disown" "echo" "emulate" "enable" "eval" "exec" "exit" "export" "false" "fc" "fg" "float" "functions" "genln" "getopts" "hash" "integer" "jobs" "kill" "let" "limit" "local" "logout" "noglob" "popd" "printf" "prompt" "pushd" "pushln" "pwd" "return" "repeat" "setopt" "shift" "source" "suspend" "test" "trap" "true" "typeset" "ulimit" "umask" "unalias" "unhash" "unlimit" "unset" "unsetopt" "wait" "whence" "where" "which" "zcompile"
+
+for i in ${ZSH_CMDs[@]}
+do
+	progarr[$((${#progarr}+1))]=$i
+done
 
 # Sort list, case-sensative
 IFS=$'\n' progarr=($(LC_COLLATE=C sort <<<"${progarr[*]}")); unset IFS
@@ -263,26 +207,16 @@ function syntax_validation_precheck
 	then
 		syntax_validation
 	
-	# sudo, nohup
-	elif [[ -n $(echo ${buffarr[$(($buff_index-1))]} | grep "sudo") ]] || [[ -n $(echo ${buffarr[$(($buff_index-1))]} | grep "nohup") ]]
+	# sudo, nohup, AND, OR, pipe, semicolon
+	elif [[ -n $(echo ${buffarr[$(($buff_index-1))]} | grep "sudo") ]] ||
+	     [[ -n $(echo ${buffarr[$(($buff_index-1))]} | grep "nohup") ]] ||
+	     [[ -n $(echo ${buffarr[$(($buff_index-1))]} | grep "&&") ]] ||
+	     [[ -n $(echo ${buffarr[$(($buff_index-1))]} | grep "||") ]] ||
+	     [[ -n $(echo ${buffarr[$(($buff_index-1))]} | grep "|") ]] ||
+	     [[ -n $(echo ${buffarr[$(($buff_index-1))]} | grep ";") ]]
 	then
 		syntax_validation
 	
-	# AND, OR
-	elif [[ -n $(echo ${buffarr[$(($buff_index-1))]} | grep "&&") ]] || [[ -n $(echo ${buffarr[$(($buff_index-1))]} | grep "||") ]]
-	then
-		syntax_validation
-
-	# Pipe
-	elif [[ -n $(echo ${buffarr[$(($buff_index-1))]} | grep "|") ]]
-	then
-		syntax_validation
-	
-	# Semi-colon
-	elif [[ -n $(echo ${buffarr[$(($buff_index-1))]} | grep ";") ]]
-	then
-		syntax_validation
-
 	# Command expression
 	elif [[ -n $(echo "${buffarr[$buff_index]}" | grep "\$(") ]]
 	then
@@ -325,7 +259,7 @@ function syntax_validation_precheck
 	fi
 
 	# Check for valid file/directories if applicable, and if they don't exist, turn prompt yellow
-	if [ $color != "red" ] || [ $IsCommand == true ]
+	if [ $color != $BUFFER_BAD ] || [ $IsCommand == true ]
 	then 
 		for (( i=0; i<=${#buffarr}; i++ ))
 		do
@@ -366,396 +300,72 @@ function do_precheck_and_redraw_prompt
 }
 
 # Trap function for each key
-function trap_A
-{
-	BUFFER=$LBUFFER"A"$RBUFFER
-	zle vi-forward-char
-	do_precheck_and_redraw_prompt
-}
-function trap_B
-{
-	BUFFER=$LBUFFER"B"$RBUFFER
-	zle vi-forward-char
-	do_precheck_and_redraw_prompt
-}
-function trap_C
-{
-	BUFFER=$LBUFFER"C"$RBUFFER
-	zle vi-forward-char
-	do_precheck_and_redraw_prompt
-}
-function trap_D
-{
-	BUFFER=$LBUFFER"D"$RBUFFER
-	zle vi-forward-char
-	do_precheck_and_redraw_prompt
-}
-function trap_E
-{
-	BUFFER=$LBUFFER"E"$RBUFFER
-	zle vi-forward-char
-	do_precheck_and_redraw_prompt
-}
-function trap_F
-{
-	BUFFER=$LBUFFER"F"$RBUFFER
-	zle vi-forward-char
-	do_precheck_and_redraw_prompt
-}
-function trap_G
-{
-	BUFFER=$LBUFFER"G"$RBUFFER
-	zle vi-forward-char
-	do_precheck_and_redraw_prompt
-}
-function trap_H
-{
-	BUFFER=$LBUFFER"H"$RBUFFER
-	zle vi-forward-char
-	do_precheck_and_redraw_prompt
-}
-function trap_I
-{
-	BUFFER=$LBUFFER"I"$RBUFFER
-	zle vi-forward-char
-	do_precheck_and_redraw_prompt
-}
-function trap_J
-{
-	BUFFER=$LBUFFER"J"$RBUFFER
-	zle vi-forward-char
-	do_precheck_and_redraw_prompt
-}
-function trap_K
-{
-	BUFFER=$LBUFFER"K"$RBUFFER
-	zle vi-forward-char
-	do_precheck_and_redraw_prompt
-}
-function trap_L
-{
-	BUFFER=$LBUFFER"L"$RBUFFER
-	zle vi-forward-char
-	do_precheck_and_redraw_prompt
-}
-function trap_M
-{
-	BUFFER=$LBUFFER"M"$RBUFFER
-	zle vi-forward-char
-	do_precheck_and_redraw_prompt
-}
-function trap_N
-{
-	BUFFER=$LBUFFER"N"$RBUFFER
-	zle vi-forward-char
-	do_precheck_and_redraw_prompt
-}
-function trap_O
-{
-	BUFFER=$LBUFFER"O"$RBUFFER
-	zle vi-forward-char
-	do_precheck_and_redraw_prompt
-}
-function trap_P
-{
-	BUFFER=$LBUFFER"P"$RBUFFER
-	zle vi-forward-char
-	do_precheck_and_redraw_prompt
-}
-function trap_Q
-{
-	BUFFER=$LBUFFER"Q"$RBUFFER
-	zle vi-forward-char
-	do_precheck_and_redraw_prompt
-}
-function trap_R
-{
-	BUFFER=$LBUFFER"R"$RBUFFER
-	zle vi-forward-char
-	do_precheck_and_redraw_prompt
-}
-function trap_S
-{
-	BUFFER=$LBUFFER"S"$RBUFFER
-	zle vi-forward-char
-	do_precheck_and_redraw_prompt
-}
-function trap_T
-{
-	BUFFER=$LBUFFER"T"$RBUFFER
-	zle vi-forward-char
-	do_precheck_and_redraw_prompt
-}
-function trap_U
-{
-	BUFFER=$LBUFFER"U"$RBUFFER
-	zle vi-forward-char
-	do_precheck_and_redraw_prompt
-}
-function trap_V
-{
-	BUFFER=$LBUFFER"V"$RBUFFER
-	zle vi-forward-char
-	do_precheck_and_redraw_prompt
-}
-function trap_W
-{
-	BUFFER=$LBUFFER"W"$RBUFFER
-	zle vi-forward-char
-	do_precheck_and_redraw_prompt
-}
-function trap_X
-{
-	BUFFER=$LBUFFER"X"$RBUFFER
-	zle vi-forward-char
-	do_precheck_and_redraw_prompt
-}
-function trap_Y
-{
-	BUFFER=$LBUFFER"Y"$RBUFFER
-	zle vi-forward-char
-	do_precheck_and_redraw_prompt
-}
-function trap_Z
-{
-	BUFFER=$LBUFFER"Z"$RBUFFER
-	zle vi-forward-char
-	do_precheck_and_redraw_prompt
-}
-function trap_a
-{
-	BUFFER=$LBUFFER"a"$RBUFFER
-	zle vi-forward-char
-	do_precheck_and_redraw_prompt
-}
-function trap_b
-{
-	BUFFER=$LBUFFER"b"$RBUFFER
-	zle vi-forward-char
-	do_precheck_and_redraw_prompt
-}
-function trap_c
-{
-	BUFFER=$LBUFFER"c"$RBUFFER
-	zle vi-forward-char
-	do_precheck_and_redraw_prompt
-}
-function trap_d
-{
-	BUFFER=$LBUFFER"d"$RBUFFER
-	zle vi-forward-char
-	do_precheck_and_redraw_prompt
-}
-function trap_e
-{
-	BUFFER=$LBUFFER"e"$RBUFFER
-	zle vi-forward-char
-	do_precheck_and_redraw_prompt
-}
-function trap_f
-{
-	BUFFER=$LBUFFER"f"$RBUFFER
-	zle vi-forward-char
-	do_precheck_and_redraw_prompt
-}
-function trap_g
-{
-	BUFFER=$LBUFFER"g"$RBUFFER
-	zle vi-forward-char
-	do_precheck_and_redraw_prompt
-}
-function trap_h
-{
-	BUFFER=$LBUFFER"h"$RBUFFER
-	zle vi-forward-char
-	do_precheck_and_redraw_prompt
-}
-function trap_i
-{
-	BUFFER=$LBUFFER"i"$RBUFFER
-	zle vi-forward-char
-	do_precheck_and_redraw_prompt
-}
-function trap_j
-{
-	BUFFER=$LBUFFER"j"$RBUFFER
-	zle vi-forward-char
-	do_precheck_and_redraw_prompt
-}
-function trap_k
-{
-	BUFFER=$LBUFFER"k"$RBUFFER
-	zle vi-forward-char
-	do_precheck_and_redraw_prompt
-}
-function trap_l
-{
-	BUFFER=$LBUFFER"l"$RBUFFER
-	zle vi-forward-char
-	do_precheck_and_redraw_prompt
-}
-function trap_m
-{
-	BUFFER=$LBUFFER"m"$RBUFFER
-	zle vi-forward-char
-	do_precheck_and_redraw_prompt
-}
-function trap_n
-{
-	BUFFER=$LBUFFER"n"$RBUFFER
-	zle vi-forward-char
-	do_precheck_and_redraw_prompt
-}
-function trap_o
-{
-	BUFFER=$LBUFFER"o"$RBUFFER
-	zle vi-forward-char
-	do_precheck_and_redraw_prompt
-}
-function trap_p
-{
-	BUFFER=$LBUFFER"p"$RBUFFER
-	zle vi-forward-char
-	do_precheck_and_redraw_prompt
-}
-function trap_q
-{
-	BUFFER=$LBUFFER"q"$RBUFFER
-	zle vi-forward-char
-	do_precheck_and_redraw_prompt
-}
-function trap_r
-{
-	BUFFER=$LBUFFER"r"$RBUFFER
-	zle vi-forward-char
-	do_precheck_and_redraw_prompt
-}
-function trap_s
-{
-	BUFFER=$LBUFFER"s"$RBUFFER
-	zle vi-forward-char
-	do_precheck_and_redraw_prompt
-}
-function trap_t
-{
-	BUFFER=$LBUFFER"t"$RBUFFER
-	zle vi-forward-char
-	do_precheck_and_redraw_prompt
-}
-function trap_u
-{
-	BUFFER=$LBUFFER"u"$RBUFFER
-	zle vi-forward-char
-	do_precheck_and_redraw_prompt
-}
-function trap_v
-{
-	BUFFER=$LBUFFER"v"$RBUFFER
-	zle vi-forward-char
-	do_precheck_and_redraw_prompt
-}
-function trap_w
-{
-	BUFFER=$LBUFFER"w"$RBUFFER
-	zle vi-forward-char
-	do_precheck_and_redraw_prompt
-}
-function trap_x
-{
-	BUFFER=$LBUFFER"x"$RBUFFER
-	zle vi-forward-char
-	do_precheck_and_redraw_prompt
-}
-function trap_y
-{
-	BUFFER=$LBUFFER"y"$RBUFFER
-	zle vi-forward-char
-	do_precheck_and_redraw_prompt
-}
-function trap_z
-{
-	BUFFER=$LBUFFER"z"$RBUFFER
-	zle vi-forward-char
-	do_precheck_and_redraw_prompt
-}
-function trap_0
-{
-	BUFFER=$LBUFFER"0"$RBUFFER
-	zle vi-forward-char
-	do_precheck_and_redraw_prompt
-}
-function trap_1
-{
-	BUFFER=$LBUFFER"1"$RBUFFER
-	zle vi-forward-char
-	do_precheck_and_redraw_prompt
-}
-function trap_2
-{
-	BUFFER=$LBUFFER"2"$RBUFFER
-	zle vi-forward-char
-	do_precheck_and_redraw_prompt
-}
-function trap_3
-{
-	BUFFER=$LBUFFER"3"$RBUFFER
-	zle vi-forward-char
-	do_precheck_and_redraw_prompt
-}
-function trap_4
-{
-	BUFFER=$LBUFFER"4"$RBUFFER
-	zle vi-forward-char
-	do_precheck_and_redraw_prompt
-}
-function trap_5
-{
-	BUFFER=$LBUFFER"5"$RBUFFER
-	zle vi-forward-char
-	do_precheck_and_redraw_prompt
-}
-function trap_6
-{
-	BUFFER=$LBUFFER"6"$RBUFFER
-	zle vi-forward-char
-	do_precheck_and_redraw_prompt
-}
-function trap_7
-{
-	BUFFER=$LBUFFER"7"$RBUFFER
-	zle vi-forward-char
-	do_precheck_and_redraw_prompt
-}
-function trap_8
-{
-	BUFFER=$LBUFFER"8"$RBUFFER
-	zle vi-forward-char
-	do_precheck_and_redraw_prompt
-}
-function trap_9
-{
-	BUFFER=$LBUFFER"9"$RBUFFER
-	zle vi-forward-char
-	do_precheck_and_redraw_prompt
-}
-function trap_+
-{
-	BUFFER=$LBUFFER"+"$RBUFFER
-	zle vi-forward-char
-	do_precheck_and_redraw_prompt
-}
-function trap__
-{
-	BUFFER=$LBUFFER"_"$RBUFFER
-	zle vi-forward-char
-	do_precheck_and_redraw_prompt
-}
-function trap_.
-{
-	BUFFER=$LBUFFER"."$RBUFFER
-	zle vi-forward-char
-	do_precheck_and_redraw_prompt
-}
+function trap_a { BUFFER=$LBUFFER"a"$RBUFFER; zle vi-forward-char; do_precheck_and_redraw_prompt }
+function trap_b { BUFFER=$LBUFFER"b"$RBUFFER; zle vi-forward-char; do_precheck_and_redraw_prompt }
+function trap_c { BUFFER=$LBUFFER"c"$RBUFFER; zle vi-forward-char; do_precheck_and_redraw_prompt }
+function trap_d { BUFFER=$LBUFFER"d"$RBUFFER; zle vi-forward-char; do_precheck_and_redraw_prompt }
+function trap_e { BUFFER=$LBUFFER"e"$RBUFFER; zle vi-forward-char; do_precheck_and_redraw_prompt }
+function trap_f { BUFFER=$LBUFFER"f"$RBUFFER; zle vi-forward-char; do_precheck_and_redraw_prompt }
+function trap_g { BUFFER=$LBUFFER"g"$RBUFFER; zle vi-forward-char; do_precheck_and_redraw_prompt }
+function trap_h { BUFFER=$LBUFFER"h"$RBUFFER; zle vi-forward-char; do_precheck_and_redraw_prompt }
+function trap_i { BUFFER=$LBUFFER"i"$RBUFFER; zle vi-forward-char; do_precheck_and_redraw_prompt }
+function trap_j { BUFFER=$LBUFFER"j"$RBUFFER; zle vi-forward-char; do_precheck_and_redraw_prompt }
+function trap_k { BUFFER=$LBUFFER"k"$RBUFFER; zle vi-forward-char; do_precheck_and_redraw_prompt }
+function trap_l { BUFFER=$LBUFFER"l"$RBUFFER; zle vi-forward-char; do_precheck_and_redraw_prompt }
+function trap_m { BUFFER=$LBUFFER"m"$RBUFFER; zle vi-forward-char; do_precheck_and_redraw_prompt }
+function trap_n { BUFFER=$LBUFFER"n"$RBUFFER; zle vi-forward-char; do_precheck_and_redraw_prompt }
+function trap_o { BUFFER=$LBUFFER"o"$RBUFFER; zle vi-forward-char; do_precheck_and_redraw_prompt }
+function trap_p { BUFFER=$LBUFFER"p"$RBUFFER; zle vi-forward-char; do_precheck_and_redraw_prompt }
+function trap_q { BUFFER=$LBUFFER"q"$RBUFFER; zle vi-forward-char; do_precheck_and_redraw_prompt }
+function trap_r { BUFFER=$LBUFFER"r"$RBUFFER; zle vi-forward-char; do_precheck_and_redraw_prompt }
+function trap_s { BUFFER=$LBUFFER"s"$RBUFFER; zle vi-forward-char; do_precheck_and_redraw_prompt }
+function trap_t { BUFFER=$LBUFFER"t"$RBUFFER; zle vi-forward-char; do_precheck_and_redraw_prompt }
+function trap_u { BUFFER=$LBUFFER"u"$RBUFFER; zle vi-forward-char; do_precheck_and_redraw_prompt }
+function trap_v { BUFFER=$LBUFFER"v"$RBUFFER; zle vi-forward-char; do_precheck_and_redraw_prompt }
+function trap_w { BUFFER=$LBUFFER"w"$RBUFFER; zle vi-forward-char; do_precheck_and_redraw_prompt }
+function trap_x { BUFFER=$LBUFFER"x"$RBUFFER; zle vi-forward-char; do_precheck_and_redraw_prompt }
+function trap_y { BUFFER=$LBUFFER"y"$RBUFFER; zle vi-forward-char; do_precheck_and_redraw_prompt }
+function trap_z { BUFFER=$LBUFFER"z"$RBUFFER; zle vi-forward-char; do_precheck_and_redraw_prompt }
+function trap_A { BUFFER=$LBUFFER"A"$RBUFFER; zle vi-forward-char; do_precheck_and_redraw_prompt }
+function trap_B { BUFFER=$LBUFFER"B"$RBUFFER; zle vi-forward-char; do_precheck_and_redraw_prompt }
+function trap_C { BUFFER=$LBUFFER"C"$RBUFFER; zle vi-forward-char; do_precheck_and_redraw_prompt }
+function trap_D { BUFFER=$LBUFFER"D"$RBUFFER; zle vi-forward-char; do_precheck_and_redraw_prompt }
+function trap_E { BUFFER=$LBUFFER"E"$RBUFFER; zle vi-forward-char; do_precheck_and_redraw_prompt }
+function trap_F { BUFFER=$LBUFFER"F"$RBUFFER; zle vi-forward-char; do_precheck_and_redraw_prompt }
+function trap_G { BUFFER=$LBUFFER"G"$RBUFFER; zle vi-forward-char; do_precheck_and_redraw_prompt }
+function trap_H { BUFFER=$LBUFFER"H"$RBUFFER; zle vi-forward-char; do_precheck_and_redraw_prompt }
+function trap_I { BUFFER=$LBUFFER"I"$RBUFFER; zle vi-forward-char; do_precheck_and_redraw_prompt }
+function trap_J { BUFFER=$LBUFFER"J"$RBUFFER; zle vi-forward-char; do_precheck_and_redraw_prompt }
+function trap_K { BUFFER=$LBUFFER"K"$RBUFFER; zle vi-forward-char; do_precheck_and_redraw_prompt }
+function trap_L { BUFFER=$LBUFFER"L"$RBUFFER; zle vi-forward-char; do_precheck_and_redraw_prompt }
+function trap_M { BUFFER=$LBUFFER"M"$RBUFFER; zle vi-forward-char; do_precheck_and_redraw_prompt }
+function trap_N { BUFFER=$LBUFFER"N"$RBUFFER; zle vi-forward-char; do_precheck_and_redraw_prompt }
+function trap_O { BUFFER=$LBUFFER"O"$RBUFFER; zle vi-forward-char; do_precheck_and_redraw_prompt }
+function trap_P { BUFFER=$LBUFFER"P"$RBUFFER; zle vi-forward-char; do_precheck_and_redraw_prompt }
+function trap_Q { BUFFER=$LBUFFER"Q"$RBUFFER; zle vi-forward-char; do_precheck_and_redraw_prompt }
+function trap_R { BUFFER=$LBUFFER"R"$RBUFFER; zle vi-forward-char; do_precheck_and_redraw_prompt }
+function trap_S { BUFFER=$LBUFFER"S"$RBUFFER; zle vi-forward-char; do_precheck_and_redraw_prompt }
+function trap_T { BUFFER=$LBUFFER"T"$RBUFFER; zle vi-forward-char; do_precheck_and_redraw_prompt }
+function trap_U { BUFFER=$LBUFFER"U"$RBUFFER; zle vi-forward-char; do_precheck_and_redraw_prompt }
+function trap_V { BUFFER=$LBUFFER"V"$RBUFFER; zle vi-forward-char; do_precheck_and_redraw_prompt }
+function trap_W { BUFFER=$LBUFFER"W"$RBUFFER; zle vi-forward-char; do_precheck_and_redraw_prompt }
+function trap_X { BUFFER=$LBUFFER"X"$RBUFFER; zle vi-forward-char; do_precheck_and_redraw_prompt }
+function trap_Y { BUFFER=$LBUFFER"Y"$RBUFFER; zle vi-forward-char; do_precheck_and_redraw_prompt }
+function trap_Z { BUFFER=$LBUFFER"Z"$RBUFFER; zle vi-forward-char; do_precheck_and_redraw_prompt }
+function trap_0 { BUFFER=$LBUFFER"0"$RBUFFER; zle vi-forward-char; do_precheck_and_redraw_prompt }
+function trap_1 { BUFFER=$LBUFFER"1"$RBUFFER; zle vi-forward-char; do_precheck_and_redraw_prompt }
+function trap_2 { BUFFER=$LBUFFER"2"$RBUFFER; zle vi-forward-char; do_precheck_and_redraw_prompt }
+function trap_3 { BUFFER=$LBUFFER"3"$RBUFFER; zle vi-forward-char; do_precheck_and_redraw_prompt }
+function trap_4 { BUFFER=$LBUFFER"4"$RBUFFER; zle vi-forward-char; do_precheck_and_redraw_prompt }
+function trap_5 { BUFFER=$LBUFFER"5"$RBUFFER; zle vi-forward-char; do_precheck_and_redraw_prompt }
+function trap_6 { BUFFER=$LBUFFER"6"$RBUFFER; zle vi-forward-char; do_precheck_and_redraw_prompt }
+function trap_7 { BUFFER=$LBUFFER"7"$RBUFFER; zle vi-forward-char; do_precheck_and_redraw_prompt }
+function trap_8 { BUFFER=$LBUFFER"8"$RBUFFER; zle vi-forward-char; do_precheck_and_redraw_prompt }
+function trap_9 { BUFFER=$LBUFFER"9"$RBUFFER; zle vi-forward-char; do_precheck_and_redraw_prompt }
+function trap_+ { BUFFER=$LBUFFER"+"$RBUFFER; zle vi-forward-char; do_precheck_and_redraw_prompt }
+function trap__ { BUFFER=$LBUFFER"_"$RBUFFER; zle vi-forward-char; do_precheck_and_redraw_prompt }
+function trap_. { BUFFER=$LBUFFER"."$RBUFFER; zle vi-forward-char; do_precheck_and_redraw_prompt }
+function trap_space { BUFFER=$LBUFFER" "$RBUFFER; zle vi-forward-char; do_precheck_and_redraw_prompt }
 function trap_backspace
 {
 	zle backward-delete-char
@@ -794,12 +404,6 @@ function trap_delete
 	zle delete-char
 	do_precheck_and_redraw_prompt
 }
-function trap_space
-{
-	BUFFER=$LBUFFER" "$RBUFFER
-	zle vi-forward-char
-	do_precheck_and_redraw_prompt
-}
 function trap_tab
 {
 	# Get everyting after the last space in $a
@@ -830,16 +434,16 @@ function trap_tab
 zle -N do_precheck_and_redraw_prompt
 
 # Bind all letters, numbers, and backspace to it
-for LETTER in {A..Z}
-do
-	bindkey $LETTER trap_$LETTER
-	zle -N trap_$LETTER
-done
-
 for letter in {a..z}
 do
 	bindkey $letter trap_$letter
 	zle -N trap_$letter
+done
+
+for LETTER in {A..Z}
+do
+	bindkey $LETTER trap_$LETTER
+	zle -N trap_$LETTER
 done
 
 for number in {0..9}
