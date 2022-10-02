@@ -32,6 +32,10 @@ BUFFER_AMBIGUOUS="93"
 
 # General variables
 zpath="/dev/shm/zsh"
+<<<<<<< HEAD
+=======
+trashpath="/dev/shm/trash"
+>>>>>>> bf5bc52 (Removed unnecessary wacks warning following update.)
 term=$(tty | grep -Eo '[0-9]{0,9}')
 color=$BUFFER_GOOD
 oldcolor=$color
@@ -66,7 +70,11 @@ do
 done
 
 # Sort list, case-sensative
+<<<<<<< HEAD
 IFS=$'\n' progarr=($(LC_COLLATE=C sort <<<"${progarr[*]}")); unset IFS
+=======
+IFS=$'\n' progarr=($(LC_COLLATE=C sort <<< "${progarr[*]}")); unset IFS
+>>>>>>> bf5bc52 (Removed unnecessary wacks warning following update.)
 set -A progarr ${(u)progarr[@]}
 
 # Get list of starting characters and their indexes to optimize searching
@@ -118,7 +126,11 @@ function syntax_validation
 				elif [ $prog_index -eq ${progarr_firstcharindex[$(($firstchar_index+1))]} ]
 				then
 					#Check for valid directory.
+<<<<<<< HEAD
 					if [[ -n $(echo ${buffarr[$buff_index]} | grep '\/') ]] && [[ -z $(echo ${buffarr[$buff_index]} | grep '\:\/\/') ]]
+=======
+					if [[ -n $(echo ${buffarr[$buff_index]} | grep '/') ]] && [[ -z $(echo ${buffarr[$buff_index]} | grep '://') ]]
+>>>>>>> bf5bc52 (Removed unnecessary wacks warning following update.)
 					then
 						if [[ ${buffarr[$buff_index]:0:1} == "~" ]]
 						then
@@ -177,7 +189,11 @@ function syntax_validation_precheck
 	fi
 
 	# Extract each component of the current command string
+<<<<<<< HEAD
 	echo $BUFFER | grep -Eo '[[:alnum:]]{1,100}|[[:alnum:]]{1,100}\+{1,100}|[[:alnum:]]{1,100}\_{1,100)|\|\s|\|\||<\s|\$\(|\&\&|[[:punct:][:alnum:]\/]{1,100}|;{1,100}' > "$zpath/buffer"
+=======
+	echo $BUFFER | grep -Eo '[[:alnum:]]{1,100}|[[:alnum:]]{1,100}\+{1,100}|[[:alnum:]]{1,100}_{1,100)|\|\s|\|\||<\s|\$\(|&&|[[:punct:][:alnum:]/]{1,100}|;{1,100}' > "$zpath/buffer"
+>>>>>>> bf5bc52 (Removed unnecessary wacks warning following update.)
 
 	# Create array from buffer
 	buff_index=0
@@ -263,7 +279,11 @@ function syntax_validation_precheck
 	then 
 		for (( i=0; i<=${#buffarr}; i++ ))
 		do
+<<<<<<< HEAD
 			if [[ -n $(echo ${buffarr[$i]} | grep '\/') ]] && [[ -z $(echo ${buffarr[$i]} | grep '\:\/\/') ]]
+=======
+			if [[ -n $(echo ${buffarr[$i]} | grep '/') ]] && [[ -z $(echo ${buffarr[$i]} | grep '://') ]]
+>>>>>>> bf5bc52 (Removed unnecessary wacks warning following update.)
 			then
 				if [[ ${buffarr[$i]:0:1} == "~" ]]
 				then
@@ -385,7 +405,11 @@ function trap_backspace
 	if [ $(( ${T[2]} - ${T[1]} )) -gt 100 ]
 	then
 		do_precheck_and_redraw_prompt
+<<<<<<< HEAD
 	elif [ -z $BUFFER ]
+=======
+	elif [ -z $BUFFER ] && [ $color != $BUFFER_GOOD ]
+>>>>>>> bf5bc52 (Removed unnecessary wacks warning following update.)
 	then
 		color=$BUFFER_GOOD
 		zle reset-prompt
@@ -396,6 +420,17 @@ function trap_enter
 	linefill=$(printf "%*s" $(($COLUMNS-$(echo -n $term | wc -m)-$(echo -n $PWD | wc -m)-$(echo -n $(date +"%T.%N") | wc -m)-12)) "" | sed "s/ / /g")
 	PROMPT=$'%F{$color}┌%f%F{$(shorthash "pts/$term")}%B☾%b%y%B☽%b%f%F{$color}─%f%F{$(shorthash $PWD)}%b%B⎛%b%d%B⎠%b%f%F{$color}$linefill%f%B⟪$(date +"%T.%N")⟫%b%F{$color}$prompt_newline└─> %f'
 	zle reset-prompt
+<<<<<<< HEAD
+=======
+
+	# Check for rm command
+	#if [ -n $(cat "$zpath/buffer" | grep -E '^rm$') ] 
+	#then
+	#	echo -n "\u001b[33mWARNING: 'rm' command detected. Zipping resultant files to /dev/shm/trash/$(date +"%H%M%S%N").zip" "\u001b[0m"
+		#date +"%H%M%S%N"
+	#fi
+
+>>>>>>> bf5bc52 (Removed unnecessary wacks warning following update.)
 	zle accept-line
 	color=$BUFFER_GOOD
 }
@@ -409,6 +444,7 @@ function trap_tab
 	# Get everyting after the last space in $a
 	# ${a##* }
 
+<<<<<<< HEAD
 	set -A BUFFER_ln "${BUFFER##* }" "${BUFFER##*;}" "${BUFFER##*&}" "${BUFFER##*|}"
 	zcomp=$(~/.zshcapture $BUFFER | head -1 | tail -1)
 	rm ~/bufferln
@@ -425,6 +461,28 @@ function trap_tab
 		done
 
 		for (( i=0; i<=$(echo $zcomp | wc -m); i++ ))
+=======
+	set -A BUFFER_ln "${BUFFER##* }" "${BUFFER##*;}" "${BUFFER##*&}" "${BUFFER##*|}" "${BUFFER##*^}"
+	set -A zcomp $(~/.zshcapture $BUFFER)
+
+	# Sort list, case-sensative
+	IFS=$'\n' zcomp=($(LC_COLLATE=C sort <<< "${zcomp[*]}")); unset IFS
+	set -A zcomp ${(u)zcomp[@]}
+
+	# Make sure zcompletion isn't empty (no possible completions) and that the buffer is also not empty
+	if [ "${zcomp[1]}" != "" ] && [ "$BUFFER" != "" ]
+	then
+		# Check which index of $BUFFER_ln is the longest but which doesn't contain the zcompletion as the last term in the command
+		for (( i=1; i<"${#BUFFER_ln}"; i++ ))
+		do
+			if [ ${#BUFFER_ln[$i]} < ${#BUFFER_ln[$(($i+1))]} ] || [ -n $(${#BUFFER_ln[$i]} | grep $(bash -c 'echo ${!#}' $BUFFER)) ]
+			then
+				BUFFER_ln=("${BUFFER_ln[@]/${#BUFFER_ln[$i]}}")
+			fi
+		done
+
+		for (( i=0; i<=$(echo ${zcomp[1]} | wc -m); i++ ))
+>>>>>>> bf5bc52 (Removed unnecessary wacks warning following update.)
 		do
 			zle vi-forward-char
 		done
