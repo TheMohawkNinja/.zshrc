@@ -59,7 +59,7 @@ set -A progarr /bin/* /sbin/* /usr/bin/* /usr/sbin/* /usr/local/bin/*
 progarr=("${progarr[@]##*/}")
 
 # Add zsh-specific commands onto the list
-set -A ZSH_CMDs "alias" "autoload" "bg" "break" "builtin" "cd" "command" "continue" "dirs" "disable" "disown" "echo" "emulate" "enable" "eval" "exec" "exit" "export" "false" "fc" "fg" "float" "functions" "genln" "getopts" "hash" "integer" "jobs" "kill" "let" "limit" "local" "logout" "noglob" "popd" "printf" "prompt" "pushd" "pushln" "pwd" "return" "repeat" "setopt" "shift" "source" "suspend" "test" "trap" "true" "typeset" "ulimit" "umask" "unalias" "unhash" "unlimit" "unset" "unsetopt" "wait" "whence" "where" "which" "zcompile"
+set -A ZSH_CMDs "alias" "autoload" "bg" "break" "builtin" "cd" "command" "continue" "dirs" "disable" "disown" "echo" "emulate" "enable" "eval" "exec" "exit" "export" "false" "fc" "fg" "float" "functions" "genln" "getopts" "hash" "history" "integer" "jobs" "kill" "let" "limit" "local" "logout" "noglob" "popd" "printf" "prompt" "pushd" "pushln" "pwd" "return" "repeat" "setopt" "shift" "source" "suspend" "test" "trap" "true" "typeset" "ulimit" "umask" "unalias" "unhash" "unlimit" "unset" "unsetopt" "wait" "whence" "where" "which" "zcompile"
 
 for i in ${ZSH_CMDs[@]}
 do
